@@ -20,6 +20,8 @@ data import
     import ws2_32,\
         WSAStartup , 'WSAStartup', \
         WSACleanup , 'WSACleanup', \
+        socket , 'socket', \
+        setsockopt , 'setsockopt', \
         bind , 'bind', \
         listen , 'listen', \
         accept , 'accept', \

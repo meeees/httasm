@@ -2,4 +2,8 @@
 ; WinSock Stuff ;
 ;;;;;;;;;;;;;;;;;
 
-; TODO: WINSOCK CODE
+winsock_setup:
+	push ebp
+	mov ebp, esp
+	sub esp, 0x190
+	
