@@ -7,29 +7,25 @@ include 'include/win32a.inc'
 include 'std.inc'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+section '.impt' code readable executable
+
+; Include of imports in a separate file.
+include 'imports.asm'
+
+
+section '.data' data readable writeable
+
+; Data for use in the code below
+include 'winsock_data.asm'
+
+
 section '.1337' code readable executable
 
-data import
-    library msvcrt, 'msvcrt.dll', \
-        ws2_32 , 'ws2_32.dll'
-
-    import msvcrt,\
-        printf , 'printf',\
-        scanf , 'scanf'
-
-    import ws2_32,\
-        WSAStartup , 'WSAStartup', \
-        WSACleanup , 'WSACleanup', \
-        socket , 'socket', \
-        setsockopt , 'setsockopt', \
-        bind , 'bind', \
-        listen , 'listen', \
-        accept , 'accept', \
-        recv , 'recv', \
-        send , 'send'
-end data
-
+; Code for execution
 include 'winsock.asm'
+
+; TODO: real stuff
 
 frmt db '%d',0,0
 
