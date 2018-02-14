@@ -30,4 +30,6 @@ include 'file.asm'
 
 start:
     call file_test
+    push 0
     call [exit]
+    int 3 ; If the program reaches here it will crash.
