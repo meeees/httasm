@@ -8,7 +8,8 @@ data import
 
     import msvcrt,\
         printf , 'printf',\
-        scanf , 'scanf'
+        scanf , 'scanf',\
+        exit, 'exit'
 
     import ws2_32,\
         WSAStartup , 'WSAStartup', \
