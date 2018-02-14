@@ -7,14 +7,27 @@ include 'include/win32a.inc'
 include 'std.inc'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-section '.1337' code readable executable writeable
+section '.1337' code readable executable
 
 data import
-    library msvcrt, 'msvcrt.dll'
+    library msvcrt, 'msvcrt.dll', \
+        ws2_32 , 'ws2_32.dll'
+
     import msvcrt,\
         printf , 'printf',\
         scanf , 'scanf'
+
+    import ws2_32,\
+        WSAStartup , 'WSAStartup', \
+        WSACleanup , 'WSACleanup', \
+        bind , 'bind', \
+        listen , 'listen', \
+        accept , 'accept', \
+        recv , 'recv', \
+        send , 'send'
 end data
+
+include 'winsock.asm'
 
 frmt db '%d',0,0
 
