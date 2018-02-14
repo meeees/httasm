@@ -47,6 +47,22 @@
 	INVALID_SOCKET	equ	not 0
 	SOCKET_ERROR	equ	-1
 
+; setsockopt stuff
+
+	SOL_SOCKET		equ	0xffff
+
+	SO_DEBUG		equ 0x0001
+	SO_ACCEPTCONN	equ	0x0002
+	SO_REUSEADDR	equ	0x0004
+	SO_KEEPALIVE	equ	0x0008
+	SO_DONTROUTE	equ	0x0010
+	SO_BROADCAST	equ	0x0020
+	SO_USELOOPBACK	equ	0x0040
+	SO_LINGER		equ	0x0080
+	SO_OOBINLINE	equ	0x0100
+
+	SO_DONTLINGER	equ not SO_LINGER
+
 ;;;;;;;;;;;;;;;;;
 
 
@@ -67,7 +83,10 @@ winsock_setup:
 	jz .done
 
 	; if its not zero then print an error and cry.
-
+	push eax
+	push winsock_error_msg
+	call [printf]
+	add esp, 8
 
 .done:
 	mov esp, ebp
@@ -77,6 +96,10 @@ winsock_setup:
 winsock_cleanup:
 	push ebp
 	mov ebp, esp
+
+	; Basically just this...
+	; Not basically, actually just this.
+	call [WSACleanup]
 
 	mov esp, ebp
 	pop ebp

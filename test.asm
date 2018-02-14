@@ -18,7 +18,7 @@ section '.data' data readable writeable
 
 ; Data for use in the code below
 include 'winsock_data.asm'
-
+string_thing db 'hello world', ENDL, 0
 
 section '.1337' code readable executable
 

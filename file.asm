@@ -1,7 +1,4 @@
 
-
-string_thing db 'hello world', ENDL, 0
-
 file_test:
 	push ebp
 	mov ebp, esp
@@ -11,3 +8,4 @@ file_test:
 
 	mov esp, ebp
 	pop ebp
+	ret
