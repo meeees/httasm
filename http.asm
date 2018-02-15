@@ -52,7 +52,6 @@ http_get_line:
 	; edx will be the end of the buffer
 	; ecx is the current character that we're reading.
 	mov ebx, [ebp+0x08] ; ebx = connection
-	xor edi, edi ; edi = 0
 	mov esi, [ebp+0x0c] ; esi = buffer
 	mov edx, [ebp+0x10] ; edx = buffer_len
 	add edx, ecx ; edx = buffer + buffer_len
@@ -72,7 +71,6 @@ http_get_line:
 	; Lazy way to preserve all the registers
 	push edx
 	push esi
-	push edi
 	push ebx
 	push ecx
 	mov eax, esp
@@ -88,7 +86,6 @@ http_get_line:
 
 	pop ecx
 	pop ebx
-	pop edi
 	pop esi
 	pop edx
 	; Restore values with esi being the recv'd value
@@ -105,7 +102,6 @@ http_get_line:
 	; Preserve my registers
 	push edx
 	push esi
-	push edi
 	push ebx
 	push ecx
 	mov eax, esp
@@ -119,7 +115,6 @@ http_get_line:
 	; Restore registers
 	pop ecx
 	pop ebx
-	pop edi
 	pop esi
 	pop edx
 
@@ -131,7 +126,6 @@ http_get_line:
 
 	push edx
 	push esi
-	push edi
 	push ebx
 	push ecx
 	mov eax, esp
@@ -144,7 +138,6 @@ http_get_line:
 
 	pop ecx
 	pop ebx
-	pop edi
 	pop esi
 	pop edx
 	jmp .notcret
@@ -160,6 +153,13 @@ http_get_line:
 .done:
 	mov byte [esi], 0
 	inc esi
+
+	; Set eax to the # of bytes read in.
+	lea eax, [edx - esi]
+	mov ecx, [ebp+0x10]
+	dec eax
+	lea eax, [ecx - eax]
+
 
 	mov esp, ebp
 	pop ebp

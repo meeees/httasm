@@ -9,7 +9,11 @@ data import
     import msvcrt,\
         printf , 'printf',\
         scanf , 'scanf',\
-        exit, 'exit'
+        exit, 'exit',\
+        strcmp , 'strcmp',\
+        sprintf , 'sprintf',\
+        strlen , 'strlen',\
+        
 
     import ws2_32,\
         WSAStartup , 'WSAStartup', \
