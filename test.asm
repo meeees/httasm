@@ -19,6 +19,7 @@ section '.data' data readable writeable
 ; Data for use in the code below
 include 'winsock_data.asm'
 include 'http_data.asm'
+include 'random_data.asm'
 
 running_msg db '%s running on port %d', ENDL, 0
 
@@ -31,8 +32,20 @@ section '.1337' code readable executable
 ; Code for execution
 include 'winsock.asm'
 include 'http.asm'
+include 'random.asm'
+
 
 start:
+
+    call random_init
+
+    ;call john_start
+
+    push 0
+    call [exit]
+    int 3 ; If the program reaches here it will crash.
+
+john_start:
     call winsock_setup
 
     ; Create the socket
@@ -101,7 +114,3 @@ start:
     call [closesocket] ; SOCKET is already on the stack.
 
     call winsock_cleanup
-
-    push 0
-    call [exit]
-    int 3 ; If the program reaches here it will crash.

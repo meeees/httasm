@@ -23,6 +23,7 @@ data import
         memcpy , 'memcpy',\
         strchr , 'strchr',\
         malloc , 'malloc',\
+        calloc, 'calloc', \
         free , 'free'
 
     import ws2_32,\
@@ -40,5 +41,11 @@ data import
 
     import kernel32,\
         CreateThread , 'CreateThread', \
-        GetLastError , 'GetLastError'
+        GetLastError , 'GetLastError', \
+        TlsAlloc, 'TlsAlloc', \
+        TlsFree, 'TlsFree', \
+        TlsGetValue, 'TlsGetValue', \
+        TlsSetValue, 'TlsSetValue'
+
+
 end data
