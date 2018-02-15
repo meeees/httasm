@@ -11,8 +11,97 @@
 http_create_listener:
 	push ebp
 	mov ebp, esp
+	
+	push 0
+	push SOCK_STREAM
+	push AF_INET
+	call [socket]
 
+	cmp eax, INVALID_SOCKET ; if socket failed then kms
+	jnz .validSocket
 
+	call [GetLastError]
+	push eax
+	push http_bad_socket
+	call http_die
+
+.validSocket:
+	
+	mov ecx, eax
+	push ecx
+
+	push 1 ; int value
+	mov eax, esp
+	push 4 ; sizeof(int)
+	push eax ; &truevalue
+	push SO_REUSEADDR
+	push SOL_SOCKET
+	push ecx ; SOCKET
+	call [setsockopt]
+	add esp, 4 ; Get rid of the 1 on the stack.
+	pop ecx ; Get the SOCKET value
+
+	cmp eax, -1
+	jnz .goodSockOpt ; If setsockopt failed then kms
+
+	call [GetLastError]
+	push eax
+	push http_bad_sockopt
+	call http_die
+
+.goodSockOpt:
+
+	push ecx
+	; Call htons on the port
+	mov eax, [ebp+0x08]
+	push eax
+	call [htons]
+	pop ecx
+
+	; Setup sockaddr_in structure
+	sub esp, 0x10
+	mov word [esp], AF_INET  ; sin_family = AF_INET
+	mov word [esp+2], ax     ; htons(port)
+	mov dword [esp+4], 0     ; INADDR_ANY
+	mov eax, esp
+
+	push ecx ; For preservation
+
+	push 0x10 ; sizeof(sockaddr_in)
+	push eax ; &sockaddr
+	push ecx ; SOCKET
+	call [bind]
+	pop ecx ; restore SOCKET
+
+	add esp, 0x10 ; clear sockaddr_in from the stack
+
+	cmp eax, -1
+	jnz .goodBind ; If bind failed then kms
+
+	call [GetLastError]
+	push eax
+	push http_bad_bind
+	call http_die
+
+.goodBind:
+
+	push ecx ; preserve value
+	; now to do the listen stuff
+	push 5
+	push ecx
+	call [listen]
+	pop ecx
+
+	cmp eax, -1
+	jnz .goodListen
+
+	call [GetLastError]
+	push eax
+	push http_bad_listen
+	call http_die
+
+.goodListen:
+	mov eax, ecx ; Return the socket with the setup stuff
 
 	mov esp, ebp
 	pop ebp
@@ -21,7 +110,7 @@ http_create_listener:
 
 ; Provides a valid HTTP response for a given connection socket.
 ; Gets the request data and creates an HTTP response and then sends it.
-; Returns: Send return value of type int
+; Returns: void
 ; Parameters:
 ;	+0x08 : SOCKET connection
 
@@ -29,7 +118,36 @@ http_handle_request:
 	push ebp
 	mov ebp, esp
 
+	; Read in the request they sent
+	sub esp, 0x1000
+	mov eax, esp
+	push 0
+	push 0x1000
+	push eax
+	mov eax, [ebp+0x08]
+	push eax
+	call [recv]
+	add esp, 0x1000
 
+
+	; Get the length of the 404 response
+	push http_404_response
+	call [strlen]
+	add esp, 4
+
+	; Send the 404 response
+	push 0
+	push eax
+	push http_404_response
+	mov eax, [ebp+0x08]
+	push eax
+	call [send]
+
+
+	; Close the socket
+	mov eax, [ebp+0x08]
+	push eax
+	call [closesocket]
 
 	mov esp, ebp
 	pop ebp
@@ -155,13 +273,20 @@ http_get_line:
 	inc esi
 
 	; Set eax to the # of bytes read in.
-	lea eax, [edx - esi]
-	mov ecx, [ebp+0x10]
-	dec eax
-	lea eax, [ecx - eax]
+	sub edx, esi
+	mov eax, [ebp+0x10]
+	dec edx
+	sub eax, edx
 
 
 	mov esp, ebp
 	pop ebp
 	ret
 
+; Calls printf will all arguments then kills the program
+http_die:
+	pop eax
+	call [printf]
+	push 1
+	call [exit]
+	int 3
