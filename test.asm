@@ -19,14 +19,14 @@ section '.data' data readable writeable
 ; Data for use in the code below
 include 'winsock_data.asm'
 include 'file_data.asm'
-
+include 'http_data.asm'
 
 section '.1337' code readable executable
 
 ; Code for execution
 include 'winsock.asm'
 include 'file.asm'
-
+include 'http.asm'
 
 start:
     call file_test
