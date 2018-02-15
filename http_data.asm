@@ -28,3 +28,13 @@ http_bad_bind db 'Bad bind call, error 0x%x', ENDL, 0
 http_bad_listen db 'Bad listen call, error 0x%x', ENDL, 0
 
 http_get_str db 'GET', 0
+
+http_path_prefix db 'htdocs', 0
+
+; htdocs, then url, then index.html if necessary
+http_path_format db '%s%.*s%s', 0
+
+http_empty_string db 0
+http_index_string db 'index.html', 0
+
+http_read_mode db 'rb',0

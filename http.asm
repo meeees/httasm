@@ -166,13 +166,51 @@ http_handle_request:
 
 	; Kill the rest of the request
 	; TODO: If its not a GET and we implement stuff we stop if its just an empty line.
+	push ebx
+
 	mov eax, [ebp+0x08]
 	push eax
 	call http_read_headers
 	add esp, 4
 
+	pop ebx
+
 	; TODO: validate the file exists and send it back
 	;       if it doesn't exist send the 404 request.
+
+	; Find the start of the URL path string
+	mov ecx, ebx
+.getUrl:
+	cmp byte [ecx], 0x2f ; '/'
+	jz .gotUrl
+	inc ecx
+	jmp .getUrl
+
+.gotUrl:
+	push ebx
+	push ecx
+
+	; Find the space after the URL path
+	push 0x20 ; ' '
+	push ecx
+	call [strchr]
+	add esp, 8
+
+	pop ecx
+	pop ebx
+
+	sub eax, ecx ; eax = length of url string
+	
+	push ebx ; preserve ebx
+
+	push eax
+	push ecx
+	mov eax, [ebp+0x08]
+	push eax
+	call http_get_request
+	add esp, 0xc
+
+	pop ebx
 
 	jmp .finishThread
 
@@ -200,6 +238,133 @@ http_handle_request:
 	pop ebp
 	ret
 
+
+; Does a get request on a given path and sends the data to the socket
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+;	+0x0c : URL ptr
+;	+0x10 : URL length
+
+http_get_request:
+	push ebp
+	mov ebp, esp
+
+	mov eax, [ebp+0x10] ; eax is the length of the url
+	mov ebx, eax ; ebx will be the necessary buffer length for the full path
+	mov ecx, [ebp+0x0c] ; ecx is the url ptr
+	movzx edx, byte [ecx + eax - 1] ; get the last character in the path
+	push edx
+	cmp edx, 0x2f ; '/'
+	jnz .dontaddindex
+
+	; We need to add index.html to the end of the path
+	add ebx, 10 ; length of index.html
+
+.dontaddindex:
+	; Now we add the length of the path prefix
+	push ebx
+	push http_path_prefix
+	call [strlen]
+	add esp, 4
+	pop ebx
+
+	add ebx, eax
+	add ebx, 5 ; For good measure, really we only need to add 1
+
+	push ebx ; In case we wanna do snprintf
+	push ebx
+	call [malloc]
+	add esp, 4
+	pop ebx
+	mov ecx, eax
+
+	pop edx ; The last character of the string
+	cmp edx, 0x2f ; '/'
+	jnz .dontindex
+
+	push ecx ; preserve ecx
+
+	push http_index_string
+	mov eax, [ebp+0x0c] ; url string
+	push eax
+	mov eax, [ebp+0x10] ; limiter to the length to grab from the string
+	push eax
+	push http_path_prefix
+	push http_path_format
+	push ebx
+	push ecx
+	call [snprintf]
+	add esp, 28 ; clear the stack args
+
+	jmp .pathcomplete
+
+.dontindex:
+	push ecx ; preserve ecx
+
+	push http_empty_string ; no need for index.html
+	mov eax, [ebp+0x0c] ; url string
+	push eax
+	mov eax, [ebp+0x10] ; limiter to the length to grab from the string
+	push eax
+	push http_path_prefix
+	push http_path_format
+	push ebx
+	push ecx
+	call [snprintf]
+	add esp, 28 ; clear the stack args
+
+.pathcomplete:
+	pop ecx ; contains ptr to full path
+
+	push ecx
+	push http_read_mode
+	push ecx
+	call [fopen]
+	add esp, 8
+
+	pop ecx ; get file name string
+	push eax ; save file* result
+
+	push ecx
+	call [free] ; free file string
+	add esp, 4
+
+	pop eax
+	push eax
+	cmp eax, 0
+	jz .404error
+
+	mov eax, [ebp+0x08]
+	push eax
+	call http_send_headers
+	add esp, 4
+	
+	mov eax, [esp]
+	push eax
+	mov eax, [ebp+0x08]
+	push eax
+	call http_send_file
+	add esp, 8
+
+	call [fclose] ; closes file* which is already on stack
+	add esp, 4
+
+	jmp .donsies
+
+.404error:
+	mov eax, [ebp+0x08]
+	push eax
+	call http_send_404
+	add esp, 4
+	jmp .donsies
+
+
+.donsies:
+	mov esp, ebp
+	pop ebp
+	ret
+
 ; Read all the headers from the request
 ; Returns: void
 ; Parameters:
@@ -216,16 +381,17 @@ http_read_headers:
 	; Read lines until we run out of stuff to read
 	push ebx
 
+	push 0
 	push 1024
 	push ebx
 	mov eax, [ebp+0x08]
 	push eax
-	call http_get_line
-	add esp, 0xc
+	call [recv]
+
 	pop ebx
 
-	cmp eax, 0
-	jge .whileloop
+	cmp eax, 1024
+	jz .whileloop
 
 .done:
 
