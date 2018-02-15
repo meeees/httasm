@@ -119,16 +119,109 @@ http_handle_request:
 	mov ebp, esp
 
 	; Read in the request they sent
-	sub esp, 0x1000
-	mov eax, esp
-	push 0
-	push 0x1000
-	push eax
+	;sub esp, 0x1000
+	;mov eax, esp
+	;push 0
+	;push 0x1000
+	;push eax
+	;mov eax, [ebp+0x08]
+	;push eax
+	;call [recv]
+	;add esp, 0x1000
+
+	sub esp, 1024
+	mov ebx, esp
+
+	push ebx ; preserve ebx
+	push 1024
+	push ebx
 	mov eax, [ebp+0x08]
 	push eax
-	call [recv]
-	add esp, 0x1000
+	call http_get_line
+	add esp, 0xc
+	pop ebx ; restore ebx
 
+	; Create lil buffer with "GET" in it
+	push 0
+	push 0
+	mov eax, esp
+	push 3
+	push ebx
+	push eax
+	call [memcpy]
+	pop eax
+	pop ebx
+	add esp, 4
+
+	push ebx
+	push http_get_str
+	push eax
+	call [stricmp]
+	add esp, 8
+	pop ebx
+	add esp, 8
+
+	cmp eax, 0 ; If its not a GET request we tell them unimplemented
+	jnz .unimplemented
+
+	; TODO: validate the file exists and send it back.
+
+	jmp .finishThread
+
+
+.unimplemented:
+
+	; TODO: Read the rest of the request here
+
+	mov eax, [ebp+0x08]
+	push eax
+	call http_send_unimplemented
+	add esp, 4
+
+.finishThread:
+	; Close the socket
+	mov eax, [ebp+0x08]
+	push eax
+	call [closesocket]
+
+	mov esp, ebp
+	pop ebp
+	ret
+
+; Sends unimplemented response
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+
+http_send_unimplemented:
+	push ebp
+	mov ebp, esp
+
+	; Get the length of the 501 response
+	push http_501_response
+	call [strlen]
+	add esp, 4
+
+	; Send the 501 response
+	push 0
+	push eax
+	push http_501_response
+	mov eax, [ebp+0x08]
+	push eax
+	call [send]
+
+	mov esp, ebp
+	pop ebp
+	ret
+
+; Sends 404 response
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+
+http_send_404:
+	push ebp
+	mov ebp, esp
 
 	; Get the length of the 404 response
 	push http_404_response
@@ -143,15 +236,104 @@ http_handle_request:
 	push eax
 	call [send]
 
+	mov esp, ebp
+	pop ebp
+	ret
 
-	; Close the socket
+; Send HTTP headers
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+
+http_send_headers:
+	push ebp
+	mov ebp, esp
+
+	push http_basic_headers
+	call [strlen]
+	add esp, 4
+
+	push 0
+	push eax
+	push http_basic_headers
 	mov eax, [ebp+0x08]
 	push eax
-	call [closesocket]
+	call [send]
 
 	mov esp, ebp
 	pop ebp
 	ret
+
+
+; Sends a file to a given socket
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+;	+0x0c : FILE* file
+
+http_send_file:
+	push ebp
+	mov ebp, esp
+
+	; Stack space for a buffer
+	sub esp, 1024
+	mov ebx, esp ; Buffer ptr
+
+	push ebx ; Preserve buffer ptr
+	mov eax, [ebp + 0x0c]
+	push eax
+	push 1024
+	push ebx
+	call [fgets]
+	add esp, 0xc
+	pop ebx ; Restore buffer ptr
+
+.whileloop:
+	; feof(file)
+	mov eax, [ebp + 0x0c]
+	push eax
+	call [feof]
+	add esp, 4
+
+	cmp eax, 0
+	jnz .done
+
+	push ebx
+	push ebx
+	call [strlen]
+	add esp, 4
+	pop ebx
+
+	push ebx ; Preserve buffer ptr
+
+	push 0
+	push eax
+	push ebx
+	mov eax, [ebp+0x08]
+	push eax
+	call [send]
+
+	pop ebx ; Restores buffer ptr
+
+	push ebx ; Preserve buffer
+
+	mov eax, [ebp + 0x0c]
+	push eax
+	push 1024
+	push ebx
+	call [fgets]
+	add esp, 0xc
+
+	pop ebx
+
+	jmp .whileloop
+
+.done:
+
+	mov esp, ebp
+	pop ebp
+	ret
+
 
 ; Gets line from HTTP request and places it in a given buffer.
 ; Returns: Number of bytes placed into the buffer, excluding null terminator. Type of int.

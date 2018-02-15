@@ -14,6 +14,11 @@ http_400_response db 'HTTP/1.0 400 BAD REQUEST', CRET, ENDL, 'Content-Type: text
 	CRET, ENDL, '<html><title>Error 400: Bad Request</title><body><h1>Bad Request</h1>', \
 	CRET, ENDL, '<p>Your browser sent a bad request.</p></body></html>', CRET, ENDL, 0
 
+http_501_response db 'HTTP/1.0 501 Method Not Implemented', CRET, ENDL, 'httasm/0.0.1', \
+	CRET, ENDL, 'Content-Type: text/html', CRET, ENDL, CRET, ENDL, '<html><title>Method Not Implemented</title>',\
+	CRET, ENDL, '<body><h1>Method Not Implemented</h1><p>HTTP Request method not supported.', \
+	CRET, ENDL, '</body></html>', CRET, ENDL, 0
+
 http_bad_socket db 'Invalid socket returned from socket call, error 0x%x', ENDL, 0
 
 http_bad_sockopt db 'Bad setsockopt call, error 0x%x', ENDL, 0
@@ -21,3 +26,5 @@ http_bad_sockopt db 'Bad setsockopt call, error 0x%x', ENDL, 0
 http_bad_bind db 'Bad bind call, error 0x%x', ENDL, 0
 
 http_bad_listen db 'Bad listen call, error 0x%x', ENDL, 0
+
+http_get_str db 'GET', 0

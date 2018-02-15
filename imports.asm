@@ -13,7 +13,13 @@ data import
         exit, 'exit',\
         strcmp , 'strcmp',\
         sprintf , 'sprintf',\
-        strlen , 'strlen'
+        strlen , 'strlen',\
+        fopen , 'fopen',\
+        fgets , 'fgets',\
+        feof , 'feof',\
+        fclose , 'fclose',\
+        stricmp , 'stricmp',\
+        memcpy , 'memcpy'
 
     import ws2_32,\
         WSAStartup , 'WSAStartup', \
