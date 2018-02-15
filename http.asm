@@ -118,17 +118,6 @@ http_handle_request:
 	push ebp
 	mov ebp, esp
 
-	; Read in the request they sent
-	;sub esp, 0x1000
-	;mov eax, esp
-	;push 0
-	;push 0x1000
-	;push eax
-	;mov eax, [ebp+0x08]
-	;push eax
-	;call [recv]
-	;add esp, 0x1000
-
 	sub esp, 1024
 	mov ebx, esp
 
@@ -335,11 +324,13 @@ http_get_request:
 	cmp eax, 0
 	jz .404error
 
+	; Send basic HTTP headers
 	mov eax, [ebp+0x08]
 	push eax
 	call http_send_headers
 	add esp, 4
 	
+	; Send the actual file requested
 	mov eax, [esp]
 	push eax
 	mov eax, [ebp+0x08]
@@ -353,6 +344,7 @@ http_get_request:
 	jmp .donsies
 
 .404error:
+	; Something went wrong and we wanna serve 404
 	mov eax, [ebp+0x08]
 	push eax
 	call http_send_404
@@ -378,7 +370,7 @@ http_read_headers:
 	mov ebx, esp
 
 .whileloop:
-	; Read lines until we run out of stuff to read
+	; Read stuff until we run out of stuff to read
 	push ebx
 
 	push 0
