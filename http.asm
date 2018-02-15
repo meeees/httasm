@@ -102,7 +102,55 @@ http_get_line:
 	jnz .notcret
 
 	; If it is cret then we gotta check to see if the next character is an endline, if so read it it.
-	
+	; Preserve my registers
+	push edx
+	push esi
+	push edi
+	push ebx
+	push ecx
+	mov eax, esp
+
+	push 2 ; MSG_PEEK
+	push 1 ; # of bytes to peek
+	push eax ; buff
+	push ebx ; SOCKET
+	call [recv]
+
+	; Restore registers
+	pop ecx
+	pop ebx
+	pop edi
+	pop esi
+	pop edx
+
+	cmp eax, 0
+	jle .notEndl
+
+	cmp cl, ENDL
+	jnz .notEndl
+
+	push edx
+	push esi
+	push edi
+	push ebx
+	push ecx
+	mov eax, esp
+
+	push 0
+	push 1 ; # of bytes
+	push eax ; buff
+	push ebx ; SOCKET
+	call [recv]
+
+	pop ecx
+	pop ebx
+	pop edi
+	pop esi
+	pop edx
+	jmp .notcret
+
+.notEndl:
+	mov ecx, ENDL
 
 .notcret:
 	mov byte [esi], cl
