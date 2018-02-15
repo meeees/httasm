@@ -164,14 +164,26 @@ http_handle_request:
 	cmp eax, 0 ; If its not a GET request we tell them unimplemented
 	jnz .unimplemented
 
-	; TODO: validate the file exists and send it back.
+	; Kill the rest of the request
+	; TODO: If its not a GET and we implement stuff we stop if its just an empty line.
+	mov eax, [ebp+0x08]
+	push eax
+	call http_read_headers
+	add esp, 4
+
+	; TODO: validate the file exists and send it back
+	;       if it doesn't exist send the 404 request.
 
 	jmp .finishThread
 
 
 .unimplemented:
 
-	; TODO: Read the rest of the request here
+	; Kill the rest of the request
+	mov eax, [ebp+0x08]
+	push eax
+	call http_read_headers
+	add esp, 4
 
 	mov eax, [ebp+0x08]
 	push eax
@@ -183,6 +195,39 @@ http_handle_request:
 	mov eax, [ebp+0x08]
 	push eax
 	call [closesocket]
+
+	mov esp, ebp
+	pop ebp
+	ret
+
+; Read all the headers from the request
+; Returns: void
+; Parameters:
+;	+0x08 : SOCKET
+
+http_read_headers:
+	push ebp
+	mov ebp, esp
+
+	sub esp, 1024
+	mov ebx, esp
+
+.whileloop:
+	; Read lines until we run out of stuff to read
+	push ebx
+
+	push 1024
+	push ebx
+	mov eax, [ebp+0x08]
+	push eax
+	call http_get_line
+	add esp, 0xc
+	pop ebx
+
+	cmp eax, 0
+	jge .whileloop
+
+.done:
 
 	mov esp, ebp
 	pop ebp
