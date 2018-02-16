@@ -32,6 +32,28 @@ random_init:
 	pop ebp
 	ret
 
+; clear out the state array for this thread
+random_clear_mem:
+	push ebp
+	mov ebp, esp
+	mov eax, [random_xorwow_tls]
+	cmp eax, 0
+	jz .already_clear
+	push eax
+	call [TlsGetValue]
+	cmp eax, 0
+	jz .already_clear
+	push eax
+	call [free]
+	add esp, 4
+	push 0
+	push [random_xorwow_tls]
+	call [TlsSetValue]
+.already_clear:
+	mov esp, ebp
+	pop ebp
+	ret
+
 ; should pass in a seed
 random_init_seeded:
 	push ebp

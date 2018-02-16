@@ -40,10 +40,9 @@ start:
     call random_generate
     call random_generate
     call random_generate
-    call random_generate
-    call random_generate
-    call random_generate
     call random_print_states
+    call random_clear_mem
+    call random_generate
 
     ;call john_start
 
