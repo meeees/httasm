@@ -92,7 +92,7 @@ random_print_states:
 	ret
 
 
-; there's a long ass list of triples we can use for this
+; there's a long list of triples we can use for this
 ; 13,17,5 because the xorshift author likes them
 ; the integer at the end can be any odd integer
 ; if the random number generator isn't initialized then we will initialize it
