@@ -37,7 +37,13 @@ include 'random.asm'
 
 start:
 
-    call random_init
+    call random_generate
+    call random_generate
+    call random_generate
+    call random_generate
+    call random_generate
+    call random_generate
+    call random_print_states
 
     ;call john_start
 
