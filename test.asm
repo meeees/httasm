@@ -37,20 +37,23 @@ include 'random.asm'
 
 start:
 
-    call random_generate
-    call random_generate
-    call random_generate
-    call random_print_states
-    call random_clear_mem
-    call random_generate
+    ;call random_generate
+    ;call random_generate
+    ;call random_generate
+    ;call random_print_states
+    ;call random_clear_mem
+    ;call random_generate
 
-    ;call john_start
+    call john_start
 
     push 0
     call [exit]
     int 3 ; If the program reaches here it will crash.
 
 john_start:
+    push ebp
+    mov ebp, esp
+
     call winsock_setup
 
     ; Create the socket
@@ -119,3 +122,7 @@ john_start:
     call [closesocket] ; SOCKET is already on the stack.
 
     call winsock_cleanup
+
+    mov esp, ebp
+    pop ebp
+    ret
