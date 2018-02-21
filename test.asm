@@ -37,8 +37,7 @@ include 'random.asm'
 
 start:
 
-    ;call random_generate
-    ;call random_generate
+    ;call random_generate_f
     ;call random_generate
     ;call random_print_states
     ;call random_clear_mem

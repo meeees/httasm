@@ -169,11 +169,55 @@ random_generate:
 	push edx
 	push random_xorwow_gen_string
 	call [printf]
-	add esp, 8
+	add esp, 4
+	pop edx
 
 .skip_debug:
-	mov edx, eax
+	mov eax, edx
 
+	mov esp, ebp
+	pop ebp
+	ret
+
+random_generate_f:
+	push ebp
+	mov ebp, esp
+
+	;we don't need debug output from this call
+	movzx eax, [random_xorwow_debugging]
+	push eax
+	mov byte [random_xorwow_debugging], 0
+	call random_generate
+	pop ebx
+	mov byte [random_xorwow_debugging], bl
+
+	push eax
+	fild dword [esp]
+	push 0x80000000
+	fild dword [esp]
+	fdivp
+	fld1
+	faddp
+	push 2
+	fild dword [esp]
+	fdivp
+	add esp, 12
+
+	;debug
+	cmp [random_xorwow_debugging], 0
+	jz .skip_debug
+	sub esp, 8
+	fst qword [esp]
+	push random_xorwow_gen_string_f
+	call [printf]
+	add esp, 12
+
+
+.skip_debug:
+	sub esp, 4
+	fstp dword [esp]
+	pop eax
+	add esp, 4
 	mov esp, ebp
 	pop ebp
 	ret
