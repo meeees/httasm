@@ -179,6 +179,8 @@ random_generate:
 	pop ebp
 	ret
 
+;generate a random float
+;returns eax in a state that's ready to be loaded with fld
 random_generate_f:
 	push ebp
 	mov ebp, esp
@@ -193,25 +195,32 @@ random_generate_f:
 
 	push eax
 	fild dword [esp]
+	;divide by largest possible value
+	;value is now (-1, 1)
 	push 0x80000000
 	fild dword [esp]
 	fdivp
+	;make sure our value isn't negative
+	;value is now [0, 2)
 	fld1
 	faddp
+	;divide by 2
+	;value is now [0, 1)
 	push 2
 	fild dword [esp]
 	fdivp
+	;clean up all the stack stuff for loading floats
 	add esp, 12
 
-	;debug
+	;debug output if we want that
 	cmp [random_xorwow_debugging], 0
 	jz .skip_debug
+	;printf expects a double so we need 8 bytes
 	sub esp, 8
 	fst qword [esp]
 	push random_xorwow_gen_string_f
 	call [printf]
 	add esp, 12
-
 
 .skip_debug:
 	sub esp, 4
